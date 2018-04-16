@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.7.1/css/bootstrap-datepicker.min.css" integrity="sha256-I4gvabvvRivuPAYFqevVhZl88+vNf2NksupoBxMQi04=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-timepicker/1.10.0/jquery.timepicker.min.css" integrity="sha256-zV9aQFg2u+n7xs0FTQEhY0zGHSFlwgIu7pivQiwJ38E=" crossorigin="anonymous" />
+
+    <title>{{ title }}</title>
+</head>
+
+<body style="padding-top: 20px; padding-bottom: 20px;">
+
+<div class="container">
+
+    <h1 class="text-center text-primary">{{ title }}</h1>
+
+    <h3 class="text-center">Schedule for the next 14 days</h3>
+    <div class="row">
+        <div class="col-lg-3 col-md-2 col-sm-1 col-0"></div>
+        <div class="col-lg-6 col-md-8 col-sm-10 col-12">
+            <table class="table table-striped table-bordered">
+                <tr>
+                    <th>Email</th>
+                    <th class="text-center">Date of Use</th>
+                    <th class="text-center">Time of Use</th>
+                </tr>
+                {% for kb in bookings %}
+                <tr>
+                    <td>{{ kb.getEmail() }}</td>
+                    <td class="text-center">{{ kb.getDateString() }}</td>
+                    <td class="text-center">{{ kb.getStartTimeString() }}-{{ kb.getStopTimeString() }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+        <div class="col-lg-3 col-md-2 col-sm-1 col-0"></div>
+    </div>
+
+    <div style="margin-top: 20px"></div>
+
+    <div class="row">
+        <div class="col-lg-3 col-md-2 col-sm-1 col-0"></div>
+        <div class="col-lg-6 col-md-8 col-sm-10 col-12">
+            <form action="request" method="post">
+                <h3 class="text-center">Submit your application</h3>
+
+                <div class="form-group">
+                    <label for="email-input">Email Address</label>
+                    <input type="email" class="form-control" id="email-input" aria-describedby="emailHelp"
+                           placeholder="Enter your {{ emailDomain }} email address." name="request-email">
+                    <small id="emailHelp" class="form-text text-muted">This is shared publicly.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="date-input">Date</label>
+                    <div class="input-group date" data-provide="datepicker">
+                        <input type="text" class="form-control" placeholder="Date" aria-label="Date"
+                               aria-describedby="dateHelp" id="date-input" name="request-date" readonly>
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="button">Choose</button>
+                        </div>
+                        <div class="input-group-addon">
+                            <span class="glyphicon glyphicon-th"></span>
+                        </div>
+                    </div>
+                    <small id="dateHelp" class="form-text text-muted">This is shared publicly.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="startTime-input">Entry Time</label>
+                    <div class="input-group" id="startTime-group">
+                        <input class="form-control" id="startTime-input" aria-describedby="startTimeHelp"
+                               placeholder="Enter your time of entry." name="request-startTime">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="button">Choose</button>
+                        </div>
+                    </div>
+                    <small id="startTimeHelp" class="form-text text-muted">This is shared publicly.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="stopTime-input">Leave Time</label>
+                    <div class="input-group" id="stopTime-group">
+                        <input type="text" class="form-control" id="stopTime-input" aria-describedby="stopTimeHelp"
+                               placeholder="Enter the time when you will leave." name="request-stopTime">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="button">Choose</button>
+                        </div>
+                    </div>
+                    <small id="stopTime" class="form-text text-muted">This is shared publicly.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="purpose-input">Purpose</label>
+                    <input type="text" class="form-control" id="purpose-input" aria-describedby="purposeHelp"
+                           placeholder="What are you going to do?" name="request-purpose">
+                    <small id="purposeHelp" class="form-text text-muted">This is <b>not</b> shared publicly.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes-textarea">Notes</label>
+                    <textarea class="form-control" id="notes-textarea" rows="2" name="request-notes"></textarea>
+                    <small class="form-text text-muted">This is <b>not</b> shared publicly. <i>Optional.</i></small>
+                </div>
+
+                <button style="width: 100%;" type="submit" id="submit-button" class="btn btn-primary text-center" disabled>
+                    Submit Application
+                </button>
+            </form>
+        </div>
+        <div class="col-lg-3 col-md-2 col-sm-1 col-0"></div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.7.1/js/bootstrap-datepicker.min.js" integrity="sha256-TueWqYu0G+lYIimeIcMI8x1m14QH/DQVt4s9m/uuhPw=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-timepicker/1.10.0/jquery.timepicker.min.js" integrity="sha256-xoE/2szqaiaaZh7goVyF5p9C/qBu9dM3V5utrQaiJMc=" crossorigin="anonymous"></script>
+<script>
+    function isDateValid() {
+        return $('#email-input').val().endsWith('@uwcchina.org');
+    }
+    function isPurposeValid() {
+        return $('#purpose-input').val() ? true : false;
+    }
+    function updateSubmitButton() {
+        if (isDateValid() && isPurposeValid()) {
+            $('#submit-button').prop('disabled', false);
+        } else {
+            $('#submit-button').prop('disabled', true);
+        }
+    }
+
+    // Configure datepicker
+    $('.input-group.date').datepicker({
+        format: 'dd/mm/yyyy'
+    });
+    $('.datepicker').datepicker({
+        format: 'dd/mm/yyyy',
+        startDate: '01/02/2018'
+    });
+
+    // Configure timepickers
+    $('#startTime-input').timepicker({
+        'timeFormat': 'H:i',
+        'step': 60,
+        'forceRoundTime': true,
+        'minTime': '09:00',
+        'maxTime': '21:00'
+    });
+    $('#startTime-group > .input-group-append > button').click(function() {
+        $('#startTime-input').timepicker('show');
+    });
+
+    $('#stopTime-input').timepicker({
+        'timeFormat': 'H:i',
+        'step': 60,
+        'forceRoundTime': true,
+        'minTime': '10:00',
+        'maxTime': '22:00'
+    });
+    $('#stopTime-group > .input-group-append > button').click(function() {
+        $('#stopTime-input').timepicker('show');
+    });
+
+    $('#email-input').focusout(function() {
+        if (!isDateValid()) {
+            $('#emailHelp').text('Please type in your @uwcchina.org email.');
+            $('#emailHelp').removeClass('text-muted');
+            $('#emailHelp').addClass('text-danger');
+        } else {
+            $('#emailHelp').text('This is shared publicly.');
+            $('#emailHelp').addClass('text-muted');
+            $('#emailHelp').removeClass('text-danger');
+        }
+
+        updateSubmitButton();
+    });
+
+    $('#purpose-input').focusout(function() {
+        if (!isPurposeValid()) {
+            $('#purposeHelp').text('Please type in what you are going to do in the kitchen.');
+            $('#purposeHelp').removeClass('text-muted');
+            $('#purposeHelp').addClass('text-danger');
+        } else {
+            $('#purposeHelp').html('This is <b>not</b> shared publicly.');
+            $('#purposeHelp').addClass('text-muted');
+            $('#purposeHelp').removeClass('text-danger');
+        }
+
+        updateSubmitButton();
+    });
+</script>
+</body>
+
+</html>
