@@ -1,22 +1,17 @@
 package com.markovejnovic.Ikap;
 
-import java.io.*;
-import java.net.InetSocketAddress;
-import java.sql.SQLException;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-
-import com.markovejnovic.Ikap.Database.DatabaseAvailabilityChecker;
-import com.markovejnovic.Ikap.Database.DatabaseManager;
 import com.markovejnovic.Ikap.HTTP.RequestParser;
-import com.markovejnovic.Ikap.KitchenBooking.*;
+import com.markovejnovic.Ikap.Request.ResponseGenerator;
 import com.markovejnovic.Ikap.Supporting.Configuration;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import org.parboiled.common.Tuple2;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
 
 public class Ikap {
 
@@ -49,95 +44,19 @@ public class Ikap {
         public void handle(HttpExchange he) {
             Headers reqHeaders = he.getRequestHeaders();
             String contentType = reqHeaders.getFirst("Content-Type");
-
             if (contentType
                     .equalsIgnoreCase("application/x-www-form-urlencoded")) {
-                System.out.println(contentType);
 
                 try {
                     String request = RequestParser
                             .getWholeRequestBody(he.getRequestBody());
-                    Map<String, List<String>> params = RequestParser
-                            .parsePostParameters(request);
+                    Tuple2<String, Integer> responsePair = ResponseGenerator.generateResponse(RequestParser
+                            .parsePostParameters(request));
 
-                    try {
-                        KitchenBooking kb = new KitchenBooking();
-                        kb.setEmail(params.get("request-email").get(0));
-                        kb.setDate(LocalDate.parse(
-                                params.get("request-date").get(0),
-                                DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-                        kb.setStartTime(LocalTime.parse(
-                                params.get("request-startTime").get(0),
-                                DateTimeFormatter.ofPattern("HH:mm")));
-                        kb.setStopTime(LocalTime.parse(
-                                params.get("request-stopTime").get(0),
-                                DateTimeFormatter.ofPattern("HH:mm")));
-                        kb.setPurpose(params.get("request-purpose").get(0));
-                        kb.setNotes(params.get("request-notes").get(0));
-
-                        KitchenBookingValidator.validate(kb);
-
-                        if (DatabaseAvailabilityChecker.isBookingAvailable(kb)) {
-                            DatabaseManager db = new DatabaseManager();
-                            db.connect();
-                            db.addBooking(kb);
-                            db.disconnect();
-
-                            byte[] response = RequestPageGenerator
-                                    .GenerateSuccess();
-                            he.sendResponseHeaders(200, response.length);
-                            OutputStream os = he.getResponseBody();
-                            os.write(response);
-                            os.close();
-                        } else {
-                            byte[] response = RequestPageGenerator
-                                    .GenerateError(InvalidityType.DATE_TAKEN);
-
-                            he.sendResponseHeaders(200, response.length);
-                            OutputStream os = he.getResponseBody();
-                            os.write(response);
-                            os.close();
-                        }
-                    } catch (InvalidEmailException iee) {
-                        byte[] response = RequestPageGenerator
-                                .GenerateError(InvalidityType.EMAIL);
-
-                        he.sendResponseHeaders(200, response.length);
-                        OutputStream os = he.getResponseBody();
-                        os.write(response);
-                        os.close();
-                    } catch (InvalidDateException ide) {
-                        byte[] response = RequestPageGenerator
-                                .GenerateError(InvalidityType.DATE);
-
-                        he.sendResponseHeaders(200, response.length);
-                        OutputStream os = he.getResponseBody();
-                        os.write(response);
-                        os.close();
-                    } catch (InvalidStartTimeException iste) {
-                        byte[] response = RequestPageGenerator
-                                .GenerateError(InvalidityType.START_TIME);
-
-                        he.sendResponseHeaders(200, response.length);
-                        OutputStream os = he.getResponseBody();
-                        os.write(response);
-                        os.close();
-                    } catch (InvalidStopTimeException istex) {
-                        byte[] response = RequestPageGenerator
-                                .GenerateError(InvalidityType.STOP_TIME);
-                    } catch (InvalidPurposeException ipe) {
-                        byte[] response = RequestPageGenerator
-                                .GenerateError(InvalidityType.PURPOSE);
-
-                        he.sendResponseHeaders(200, response.length);
-                        OutputStream os = he.getResponseBody();
-                        os.write(response);
-                        os.close();
-                    } catch (ClassNotFoundException cnfe) {
-                        cnfe.printStackTrace();
-                    } catch (SQLException se) {
-                        se.printStackTrace();
-                    }
+                    he.sendResponseHeaders(responsePair.b, responsePair.a.getBytes().length);
+                    OutputStream os = he.getResponseBody();
+                    os.write(responsePair.a.getBytes());
+                    os.close();
                 } catch (IOException ioe) {
                     System.err.println("Could not parse POST data. " +
                             "Sending 400 response code...");

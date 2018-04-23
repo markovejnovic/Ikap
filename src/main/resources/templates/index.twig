@@ -17,10 +17,10 @@
 
     <h1 class="text-center text-primary">{{ title }}</h1>
 
-    <h3 class="text-center">Schedule for the next 14 days</h3>
     <div class="row">
-        <div class="col-lg-3 col-md-2 col-sm-1 col-0"></div>
-        <div class="col-lg-6 col-md-8 col-sm-10 col-12">
+
+        <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 col-12">
+            <h3 class="text-center">Schedule for the next 14 days</h3>
             <table class="table table-striped table-bordered">
                 <tr>
                     <th>Email</th>
@@ -36,15 +36,9 @@
                 {% endfor %}
             </table>
         </div>
-        <div class="col-lg-3 col-md-2 col-sm-1 col-0"></div>
-    </div>
 
-    <div style="margin-top: 20px"></div>
-
-    <div class="row">
-        <div class="col-lg-3 col-md-2 col-sm-1 col-0"></div>
-        <div class="col-lg-6 col-md-8 col-sm-10 col-12">
-            <form action="request" method="post">
+        <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 col-12">
+            <form id="request-form">
                 <h3 class="text-center">Submit your application</h3>
 
                 <div class="form-group">
@@ -55,7 +49,6 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="date-input">Date</label>
                     <div class="input-group date" data-provide="datepicker">
                         <input type="text" class="form-control" placeholder="Date" aria-label="Date"
                                aria-describedby="dateHelp" id="date-input" name="request-date" readonly>
@@ -106,16 +99,20 @@
                     <small class="form-text text-muted">This is <b>not</b> shared publicly. <i>Optional.</i></small>
                 </div>
 
+                <div class="alert alert-danger invalid-info-alert" role="alert" style="display: none">
+
+                </div>
+
                 <button style="width: 100%;" type="submit" id="submit-button" class="btn btn-primary text-center" disabled>
                     Submit Application
                 </button>
             </form>
         </div>
-        <div class="col-lg-3 col-md-2 col-sm-1 col-0"></div>
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.7.1/js/bootstrap-datepicker.min.js" integrity="sha256-TueWqYu0G+lYIimeIcMI8x1m14QH/DQVt4s9m/uuhPw=" crossorigin="anonymous"></script>
@@ -181,6 +178,10 @@
         updateSubmitButton();
     });
 
+    $('.form-control').focusin(function() {
+        $('.invalid-info-alert').hide();
+    });
+
     $('#purpose-input').focusout(function() {
         if (!isPurposeValid()) {
             $('#purposeHelp').text('Please type in what you are going to do in the kitchen.');
@@ -193,6 +194,46 @@
         }
 
         updateSubmitButton();
+    });
+
+    // Ajax Requests
+    var request;
+    $("#request-form").submit(function(event) {
+        event.preventDefault();
+
+        if (request) {
+            request.abort();
+        }
+
+        var $form = $(this);
+
+        var $inputs = $form.find("input, select, button, textarea");
+
+        var serializedData = $form.serialize();
+        $inputs.prop("disabled", true);
+
+        request = $.ajax({
+            url: "/request",
+            type: "post",
+            contentType: "application/x-www-form-urlencoded",
+            data: serializedData,
+            error: function(xhr, status, error) {
+                var rsp = xhr.responseText;
+
+                if (rsp == "DATE_TAKEN") {
+                    $(".invalid-info-alert").show();
+                    $(".invalid-info-alert").text("Date Taken. Please set another date.");
+                }
+            }
+        });
+
+        request.done(function(response, textStatus, jqXHR) {
+            console.log("Success");
+        });
+
+        request.always(function() {
+            $inputs.prop("disabled", false);
+        });
     });
 </script>
 </body>
