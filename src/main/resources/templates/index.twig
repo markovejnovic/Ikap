@@ -8,14 +8,57 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.7.1/css/bootstrap-datepicker.min.css" integrity="sha256-I4gvabvvRivuPAYFqevVhZl88+vNf2NksupoBxMQi04=" crossorigin="anonymous" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-timepicker/1.10.0/jquery.timepicker.min.css" integrity="sha256-zV9aQFg2u+n7xs0FTQEhY0zGHSFlwgIu7pivQiwJ38E=" crossorigin="anonymous" />
 
+    <style>
+        .loader-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+
+            z-index: 10;
+
+            position: fixed;
+            background-color: rgba(0, 0, 0, 0.5);
+
+            transition: all 0.5s;
+            -webkit-transition: all 0.5s;
+            -moz-transition: all 0.5s;
+        }
+
+        .loader {
+            border: 16px solid #f3f3f3; /* Light grey */
+            border-top: 16px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+    </style>
+
     <title>{{ title }}</title>
 </head>
 
 <body style="padding-top: 20px; padding-bottom: 20px;">
 
-<div class="container">
+<div class="container content-wrapper">
 
     <h1 class="text-center text-primary">{{ title }}</h1>
+
+    <div class="row">
+        <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+            <div class="alert alert-danger invalid-info-alert" role="alert" style="display: none"></div>
+        </div>
+    </div>
 
     <div class="row">
 
@@ -99,15 +142,15 @@
                     <small class="form-text text-muted">This is <b>not</b> shared publicly. <i>Optional.</i></small>
                 </div>
 
-                <div class="alert alert-danger invalid-info-alert" role="alert" style="display: none">
-
-                </div>
-
                 <button style="width: 100%;" type="submit" id="submit-button" class="btn btn-primary text-center" disabled>
                     Submit Application
                 </button>
             </form>
         </div>
+    </div>
+
+    <div class="loader-container" style="display: none;">
+        <div class="loader"></div>
     </div>
 </div>
 
@@ -211,28 +254,55 @@
 
         var serializedData = $form.serialize();
         $inputs.prop("disabled", true);
+        $(".loader-container").fadeIn(500);
 
         request = $.ajax({
             url: "/request",
             type: "post",
             contentType: "application/x-www-form-urlencoded",
             data: serializedData,
+            success: function(data, status, xhr) {
+                console.log("Success");
+            },
             error: function(xhr, status, error) {
                 var rsp = xhr.responseText;
 
                 if (rsp == "DATE_TAKEN") {
+                    $(".invalid-info-alert").text("Your chosen date is taken. Please set another date.");
                     $(".invalid-info-alert").show();
-                    $(".invalid-info-alert").text("Date Taken. Please set another date.");
+                } else if (rsp == "INVALID_EMAIL") {
+                    $(".invalid-info-alert").text("Your email seems to be invalid. Please use your @uwcchina email address");
+                    $(".invalid-info-alert").show();
+                } else if (rsp == "INVALID_DATE") {
+                    $(".invalid-info-alert").text("Your date seems to be invalid. Please enter a day that is at least 24 hours from now.");
+                    $(".invalid-info-alert").show();
+                } else if (rsp == "INVALID_START_TIME") {
+                    $(".invalid-info-alert").text("Your entry time seems to be invalid.");
+                    $(".invalid-info-alert").show();
+                } else if (rsp == "INVALID_STOP_TIME") {
+                    $(".invalid-info-alert").text("Your exit time seems to be invalid.");
+                    $(".invalid-info-alert").show();
+                } else if (rsp == "INVALID_PURPOSE") {
+                    $(".invalid-info-alert").text("Your purpose is empty. Please write what you want to do in the International Kitchen.");
+                    $(".invalid-info-alert").show();
+                } else {
+                    $(".invalid-info-alert").text("Server error.");
+                    $(".invalid-info-alert").show();
                 }
+                $('html, body').animate({
+                    scrollTop: $(".invalid-info-alert").offset().top
+                }, 200);
             }
         });
 
         request.done(function(response, textStatus, jqXHR) {
             console.log("Success");
+            location.reload();
         });
 
         request.always(function() {
             $inputs.prop("disabled", false);
+            $(".loader-container").fadeOut(500);
         });
     });
 </script>

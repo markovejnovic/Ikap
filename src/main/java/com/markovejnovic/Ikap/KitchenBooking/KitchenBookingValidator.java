@@ -43,7 +43,8 @@ public class KitchenBookingValidator {
 
     public static void validateStopTime(KitchenBooking kb) throws InvalidStopTimeException {
         if (kb.getStopTime().isBefore(LocalTime.of(10, 0)) ||
-                kb.getStartTime().isAfter(LocalTime.of(22, 0))) {
+                kb.getStartTime().isAfter(LocalTime.of(22, 0)) ||
+                kb.getStopTime().isBefore(kb.getStartTime())) {
             throw new InvalidStopTimeException(
                     "Invalid stop time.\n" +
                             "Stop Time should be after 9:00 and before 21:00"
