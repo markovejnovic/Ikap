@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'com.markovejnovic.Ikap'
-version '0.2'
+version '0.3'
 
 mainClassName = 'com.markovejnovic.Ikap.Ikap'
 
